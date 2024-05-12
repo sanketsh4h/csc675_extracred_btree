@@ -1,18 +1,19 @@
+import sys
+
 class BPlusTree:
     class Node:
         def __init__(self, is_leaf=False):
             self.is_leaf = is_leaf
             self.keys = []
             self.children = []
-        
+
         def __str__(self):
-            if self.is_leaf:
-                return f"Leaf: {self.keys}"
-            return f"Node: {self.keys}"
-    
+            return f"{'Leaf' if self.is_leaf else 'Node'}: {self.keys}"
+
     def __init__(self, order):
         self.root = self.Node(is_leaf=True)
         self.order = order
+        self.min_keys = (order - 1) // 2
 
     def _find(self, node, key):
         for i, item in enumerate(node.keys):
@@ -20,60 +21,137 @@ class BPlusTree:
                 return i
         return len(node.keys)
 
-    def _insert_non_full(self, node, key, data):
+    def _insert_non_full(self, node, key, data=None):
         index = self._find(node, key)
         if node.is_leaf:
-            node.keys.insert(index, (key, data))
-            node.children.insert(index, None)
+            node.keys.insert(index, key)
         else:
             child = node.children[index]
-            if len(child.keys) == self.order:
+            if len(child.keys) == self.order - 1:
                 self._split_child(node, index)
                 if key > node.keys[index]:
                     index += 1
             self._insert_non_full(node.children[index], key, data)
-    
-    def _split_child(self, parent, index):
-        new_node = self.Node(is_leaf=parent.children[index].is_leaf)
-        child = parent.children[index]
-        mid_point = len(child.keys) // 2
-        split_key = child.keys[mid_point]
 
-        new_node.keys = child.keys[mid_point + 1:]
-        new_node.children = child.children[mid_point + 1:]
-        child.keys = child.keys[:mid_point]
-        child.children = child.children[:mid_point + 1]
+    def _split_child(self, parent, index):
+        child = parent.children[index]
+        new_node = self.Node(is_leaf=child.is_leaf)
+        mid_index = len(child.keys) // 2
+        split_key = child.keys[mid_index]
+
+        new_node.keys = child.keys[mid_index + 1:]
+        child.keys = child.keys[:mid_index]
+        if not child.is_leaf:
+            new_node.children = child.children[mid_index + 1:]
+            child.children = child.children[:mid_index + 1]
 
         parent.keys.insert(index, split_key)
         parent.children.insert(index + 1, new_node)
 
     def insert(self, key, data=None):
         root = self.root
-        if len(root.keys) == self.order:
+        if len(root.keys) == self.order - 1:
             new_root = self.Node()
-            new_root.children.append(root)
+            new_root.children.append(self.root)
             self._split_child(new_root, 0)
             self.root = new_root
         self._insert_non_full(self.root, key, data)
 
+    def delete(self, key):
+        self._delete_recursive(self.root, key)
+        if len(self.root.keys) == 0 and not self.root.is_leaf:
+            self.root = self.root.children[0]  # Shrink tree height if necessary
+
+    def _delete_recursive(self, node, key):
+        index = self._find(node, key)
+        if node.is_leaf:
+            if index < len(node.keys) and node.keys[index] == key:
+                node.keys.pop(index)
+                return True
+            return False
+        if index < len(node.keys) and node.keys[index] == key:
+            self._delete_internal(node, key, index)
+        else:
+            child = node.children[index]
+            if len(child.keys) < self.min_keys:
+                self._fix_deficiency(node, index)
+            self._delete_recursive(child, key)
+
+    def _delete_internal(self, node, key, index):
+        left_child = node.children[index]
+        while not left_child.is_leaf:
+            left_child = left_child.children[-1]
+        largest_key = left_child.keys[-1]
+        node.keys[index] = largest_key
+        self._delete_recursive(node.children[index], largest_key)
+
+    def _fix_deficiency(self, node, index):
+        child = node.children[index]
+        left_sibling = node.children[index - 1] if index > 0 else None
+        right_sibling = node.children[index + 1] if index < len(node.children) - 1 else None
+
+        if left_sibling and len(left_sibling.keys) > self.min_keys:  # Try left sibling first
+            child.keys.insert(0, node.keys[index - 1])
+            node.keys[index - 1] = left_sibling.keys.pop()
+            if not left_sibling.is_leaf:
+                child.children.insert(0, left_sibling.children.pop())
+        elif right_sibling and len(right_sibling.keys) > self.min_keys:  # Try right sibling second
+            child.keys.append(node.keys[index])
+            node.keys[index] = right_sibling.keys.pop(0)
+            if not right_sibling.is_leaf:
+                child.children.append(right_sibling.children.pop(0))
+        else:  # Merge with a sibling
+            if left_sibling:
+                left_sibling.keys.extend([node.keys.pop(index - 1)] + child.keys)
+                left_sibling.children.extend(child.children)
+                node.children.pop(index)
+            else:
+                child.keys.extend([node.keys.pop(index)] + right_sibling.keys)
+                child.children.extend(right_sibling.children)
+                node.children.pop(index + 1)
+            if not node.keys:
+                self.root = node.children[0]  # Update root if necessary
+
     def show(self):
-        nodes = [self.root]
-        while nodes:
-            next_nodes = []
-            line = " | ".join(str(node) for node in nodes)
-            print(line)
-            for node in nodes:
+        levels = [self.root]
+        while levels:
+            current = levels
+            levels = []
+            for node in current:
                 if not node.is_leaf:
-                    next_nodes.extend(node.children)
-            nodes = next_nodes
+                    levels.extend(node.children)
+            print(' | '.join(str(node) for node in current))
 
-tree = BPlusTree(3)  # A small order for easy testing and visualization
+def main():
+    if len(sys.argv) != 2:
+        print("Usage: python BPlusTree.py <order>")
+        sys.exit(1)
 
-# Demonstration of operations
-tree.insert(10)
-tree.insert(20)
-tree.insert(30)
-tree.show()
+    order = int(sys.argv[1])
+    tree = BPlusTree(order)
+    print("B+ Tree created with order:", order)
+    print("Available commands: INSERT <value>, DELETE <value>, UPDATE <old_value> <new_value>, SHOW")
 
-tree.insert(40)
-tree.show()
+    while True:
+        command = input("Enter command: ").strip()
+        if command.startswith('INSERT'):
+            _, value = command.split()
+            tree.insert(int(value))
+            tree.show()
+        elif command.startswith('DELETE'):
+            _, value = command.split()
+            tree.delete(int(value))
+            tree.show()
+        elif command.startswith('UPDATE'):
+            _, old_value, new_value = command.split()
+            tree.delete(int(old_value))
+            tree.insert(int(new_value))
+            tree.show()
+        elif command == 'SHOW':
+            tree.show()
+        elif command.lower() == 'exit':
+            print("Exiting B+ Tree Interactive Shell.")
+            break
+
+if __name__ == '__main__':
+    main()
