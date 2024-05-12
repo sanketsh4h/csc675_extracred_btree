@@ -47,20 +47,24 @@ class BPlusTree:
 
         parent.keys.insert(index, split_key)
         parent.children.insert(index + 1, new_node)
+        if len(parent.keys) == self.order:
+            self._split_root()
+
+    def _split_root(self):
+        old_root = self.root
+        new_root = self.Node()
+        new_root.children.append(old_root)
+        self._split_child(new_root, 0)
+        self.root = new_root
 
     def insert(self, key, data=None):
-        root = self.root
-        if len(root.keys) == self.order - 1:
-            new_root = self.Node()
-            new_root.children.append(self.root)
-            self._split_child(new_root, 0)
-            self.root = new_root
+        if len(self.root.keys) == self.order - 1:
+            self._split_root()
         self._insert_non_full(self.root, key, data)
 
     def delete(self, key):
-        self._delete_recursive(self.root, key)
-        if len(self.root.keys) == 0 and not self.root.is_leaf:
-            self.root = self.root.children[0]  # Shrink tree height if necessary
+        if not self._delete_recursive(self.root, key) and not self.root.keys:
+            self.root = self.root.children[0] if not self.root.is_leaf else self.Node(is_leaf=True)
 
     def _delete_recursive(self, node, key):
         index = self._find(node, key)
@@ -70,37 +74,35 @@ class BPlusTree:
                 return True
             return False
         if index < len(node.keys) and node.keys[index] == key:
-            self._delete_internal(node, key, index)
-        else:
-            child = node.children[index]
-            if len(child.keys) < self.min_keys:
+            node.keys[index] = self._delete_internal(node.children[index])
+            return True
+        elif self._delete_recursive(node.children[index], key):
+            if len(node.children[index].keys) < self.min_keys:
                 self._fix_deficiency(node, index)
-            self._delete_recursive(child, key)
+            return True
+        return False
 
-    def _delete_internal(self, node, key, index):
-        left_child = node.children[index]
-        while not left_child.is_leaf:
-            left_child = left_child.children[-1]
-        largest_key = left_child.keys[-1]
-        node.keys[index] = largest_key
-        self._delete_recursive(node.children[index], largest_key)
+    def _delete_internal(self, node):
+        if node.is_leaf:
+            return node.keys.pop()  # Return last key
+        return self._delete_internal(node.children[-1])
 
     def _fix_deficiency(self, node, index):
         child = node.children[index]
         left_sibling = node.children[index - 1] if index > 0 else None
         right_sibling = node.children[index + 1] if index < len(node.children) - 1 else None
 
-        if left_sibling and len(left_sibling.keys) > self.min_keys:  # Try left sibling first
+        if left_sibling and len(left_sibling.keys) > self.min_keys:
             child.keys.insert(0, node.keys[index - 1])
             node.keys[index - 1] = left_sibling.keys.pop()
             if not left_sibling.is_leaf:
                 child.children.insert(0, left_sibling.children.pop())
-        elif right_sibling and len(right_sibling.keys) > self.min_keys:  # Try right sibling second
+        elif right_sibling and len(right_sibling.keys) > self.min_keys:
             child.keys.append(node.keys[index])
             node.keys[index] = right_sibling.keys.pop(0)
             if not right_sibling.is_leaf:
                 child.children.append(right_sibling.children.pop(0))
-        else:  # Merge with a sibling
+        else:
             if left_sibling:
                 left_sibling.keys.extend([node.keys.pop(index - 1)] + child.keys)
                 left_sibling.children.extend(child.children)
@@ -109,8 +111,8 @@ class BPlusTree:
                 child.keys.extend([node.keys.pop(index)] + right_sibling.keys)
                 child.children.extend(right_sibling.children)
                 node.children.pop(index + 1)
-            if not node.keys:
-                self.root = node.children[0]  # Update root if necessary
+            if len(node.keys) == 0 and node == self.root:
+                self.root = child  # Reduce tree height
 
     def show(self):
         levels = [self.root]
