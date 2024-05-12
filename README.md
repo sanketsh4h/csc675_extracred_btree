@@ -76,8 +76,3 @@ Where `<order>` is the order of the B+ Tree you wish to create. The order must b
    ```plaintext
    Enter command: exit
    ```
-
-## Testing
-
-To test all functionalities, start the application and sequentially use the `INSERT`, `DELETE`, `UPDATE`, and `SHOW` commands. Observe the outputs after each operation to verify that the B+ Tree is functioning correctly. Ensure to test edge cases such as inserting duplicate values, deleting non-existent values, and updating values in various positions within the tree.
-```
