@@ -11,8 +11,8 @@ This repository contains an implementation of a B+ Tree in Python. The B+ Tree s
 To run this project, clone the repository and navigate into the project directory:
 
 ```bash
-git clone https://your-repository-url.git
-cd your-repository-directory
+git clone https://github.com/sanketsh4h/csc675_extracred_btree.git
+cd csc675_extracred_btree
 ```
 
 ## Usage
