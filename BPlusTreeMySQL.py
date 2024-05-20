@@ -4,9 +4,9 @@ from BPlusTree import BPlusTree
 # MySQL connection setup
 db = mysql.connector.connect(
     host="localhost",
-    user="your_username",
-    password="your_password",
-    database="your_database"
+    user="root",
+    password="",
+    database="testing_btree"
 )
 
 cursor = db.cursor()
