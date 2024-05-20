@@ -173,12 +173,12 @@ def main():
             tree.show()
         elif command.startswith('DELETE'):
             _, value = command.split(maxsplit=1)
-            tree.delete(eval(value))  # Using eval to handle different data types
+            tree.delete(eval(value))  
             tree.show()
         elif command.startswith('UPDATE'):
             _, old_value, new_value = command.split(maxsplit=2)
-            tree.delete(eval(old_value))  # Using eval to handle different data types
-            tree.insert(eval(new_value))  # Using eval to handle different data types
+            tree.delete(eval(old_value))  
+            tree.insert(eval(new_value)) 
             tree.show()
         elif command == 'SHOW':
             tree.show()
