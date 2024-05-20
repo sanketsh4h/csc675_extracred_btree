@@ -1,7 +1,7 @@
 import mysql.connector
 from BPlusTree import BPlusTree
 
-# MySQL connection setup
+
 db = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -11,7 +11,7 @@ db = mysql.connector.connect(
 
 cursor = db.cursor()
 
-# B+ Tree implementation (as discussed previously)
+# B+ Tree implementation 
 
 class MySQLBPlusTree:
     def __init__(self, order):
