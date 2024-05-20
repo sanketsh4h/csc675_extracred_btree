@@ -1,78 +1,86 @@
-# B+ Tree Implementation
+# B+ Tree with MySQL Integration
 
-This repository contains an implementation of a B+ Tree in Python. The B+ Tree supports various operations such as insert, delete, update, and show. These operations can be performed interactively via the command line.
+This repository contains a Python implementation of a B+ Tree index structure that integrates with a MySQL database. The implementation supports various MySQL data types and provides basic operations such as INSERT, UPDATE, DELETE, and SHOW.
 
-## Requirements
+## Files
 
-- Python 3.6 or higher
+1. **BPlusTreeMySQL.py**
+    - This script connects to a MySQL database and manages a B+ Tree index. It supports the following operations:
+        - INSERT: Insert data items into the index.
+        - UPDATE: Update existing items in the index.
+        - DELETE: Delete items from the index.
+        - SHOW: Display the current status of the index structure.
+
+2. **setup_schema.sql**
+    - This SQL file creates the necessary schema and table for the MySQL database. Run this file before running the Python script to set up the database.
+
+3. **test_BPlusTreeMySQL.py**
+    - This file contains unit tests for the INSERT, UPDATE, DELETE, and SHOW operations. It ensures that the operations work correctly for various MySQL data types.
 
 ## Setup
 
-To run this project, clone the repository and navigate into the project directory:
+### Prerequisites
 
-```bash
-git clone https://github.com/sanketsh4h/csc675_extracred_btree.git
-cd csc675_extracred_btree
-```
+- MySQL server installed and running.
+- MySQL user with necessary permissions to create databases and tables.
+- Python 3.x installed.
+- MySQL Connector for Python installed (`mysql-connector-python`).
+
+### Installation
+
+1. Clone the repository:
+    ```bash
+    git clone https://github.com/your_username/BPlusTreeMySQL.git
+    cd BPlusTreeMySQL
+    ```
+
+2. Install the required Python package:
+    ```bash
+    pip install mysql-connector-python
+    ```
+
+3. Set up the MySQL database:
+    - Open the `setup_schema.sql` file and update the database name if necessary.
+    - Run the SQL file to create the schema and table:
+      ```bash
+      mysql -u your_username -p < setup_schema.sql
+      ```
 
 ## Usage
 
-To start the program, run the following command in your terminal:
+1. Run the Python script for interactive operations:
+    ```bash
+    python BPlusTreeMySQL.py
+    ```
 
-```bash
-python BPlusTree.py <order>
-```
+    Follow the on-screen prompts to perform operations:
+    - INSERT: `INSERT <int> <float> <string> <date>`
+    - DELETE: `DELETE <int>`
+    - UPDATE: `UPDATE <old_int> <new_int> <float> <string> <date>`
+    - SHOW: `SHOW`
 
-Where `<order>` is the order of the B+ Tree you wish to create. The order must be a positive integer.
+2. Run the unit tests to verify the operations:
+    ```bash
+    python -m unittest test_BPlusTreeMySQL.py
+    ```
 
-### Available Commands
+## Example Commands
 
-- `INSERT <value>`: Inserts a value into the B+ Tree.
-- `DELETE <value>`: Deletes a value from the B+ Tree.
-- `UPDATE <old_value> <new_value>`: Updates an existing value in the B+ Tree with a new one.
-- `SHOW`: Displays the current structure of the B+ Tree.
-- `exit`: Exits the application.
+- Insert an entry:
+    ```bash
+    INSERT 10 10.5 "test1" "2024-05-20"
+    ```
+- Delete an entry:
+    ```bash
+    DELETE 10
+    ```
+- Update an entry:
+    ```bash
+    UPDATE 10 15 15.5 "test_updated" "2024-05-23"
+    ```
+- Show the B+ Tree structure:
+    ```bash
+    SHOW
+    ```
 
-### Command Examples
 
-1. **Creating the B+ Tree**
-
-   Start the B+ Tree application with an order of 3:
-   ```bash
-   python BPlusTree.py 3
-   ```
-
-2. **Inserting Values**
-
-   Insert a value into the B+ Tree:
-   ```plaintext
-   Enter command: INSERT 10
-   ```
-
-3. **Deleting Values**
-
-   Delete a value from the B+ Tree:
-   ```plaintext
-   Enter command: DELETE 10
-   ```
-
-4. **Updating Values**
-
-   Update an existing value in the B+ Tree:
-   ```plaintext
-   Enter command: UPDATE 10 15
-   ```
-
-5. **Showing the Tree**
-
-   Display the current structure of the B+ Tree:
-   ```plaintext
-   Enter command: SHOW
-   ```
-
-6. **Exiting the Program**
-
-   Exit the application:
-   ```plaintext
-   Enter command: exit
-   ```
