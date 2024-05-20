@@ -7,7 +7,7 @@ db = mysql.connector.connect(
     host="localhost",
     user="root",
     password="",
-    database="testin_btree"
+    database="testing_btree"
 )
 
 cursor = db.cursor()
